@@ -77,7 +77,7 @@ Fora do escopo desta entrega:
 Clone o repositório, entre na pasta do projeto e confira o Python:
 
 ```bash
-git clone URL_DO_REPOSITORIO
+git clone https://github.com/JairoMarinho/sensor-ambiental-virtual.git
 cd sensor-ambiental-virtual
 python3 --version
 ```
