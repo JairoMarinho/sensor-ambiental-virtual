@@ -1,0 +1,20 @@
+[project]
+name = "sensor-ambiental-virtual"
+version = "0.1.0"
+description = "Sensor virtual de temperatura e umidade para a camada de percepção de uma solução IoT."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Equipe IN1061" }]
+dependencies = []
+
+[project.scripts]
+sensor-virtual = "src.sensor_virtual.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
