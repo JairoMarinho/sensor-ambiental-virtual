@@ -1,5 +1,3 @@
-"""Interface de linha de comando do sensor virtual."""
-
 from __future__ import annotations
 
 import argparse
@@ -9,87 +7,97 @@ import sys
 import time
 from typing import Sequence
 
-from .sensor import EnvironmentalSensor
-from .storage import append_reading, format_readings, read_readings
+from .sensor import SensorAmbientalVirtual
+from .storage import carregar_leituras, salvar_leitura
 
 
-DEFAULT_DATA_FILE = Path("data/readings.jsonl")
+ARQUIVO_PADRAO = Path("data/leituras.jsonl")
 
 
-def non_negative_float(value: str) -> float:
-    number = float(value)
-    if number < 0:
-        raise argparse.ArgumentTypeError("o valor deve ser maior ou igual a zero")
-    return number
+def inteiro_positivo(valor: str) -> int:
+    numero = int(valor)
+    if numero < 1:
+        raise argparse.ArgumentTypeError("informe um número inteiro maior que zero")
+    return numero
 
 
-def positive_int(value: str) -> int:
-    number = int(value)
-    if number <= 0:
-        raise argparse.ArgumentTypeError("o valor deve ser maior que zero")
-    return number
+def numero_nao_negativo(valor: str) -> float:
+    numero = float(valor)
+    if numero < 0:
+        raise argparse.ArgumentTypeError("informe um valor maior ou igual a zero")
+    return numero
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+def criar_analisador() -> argparse.ArgumentParser:
+    analisador = argparse.ArgumentParser(
         prog="sensor-virtual",
-        description="Sensor virtual de temperatura e umidade para a camada de percepção IoT.",
+        description="Simulação de um sensor ambiental para aplicações IoT.",
     )
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    comandos = analisador.add_subparsers(dest="comando", required=True)
 
-    generate = subparsers.add_parser("generate", help="gera e armazena novas leituras")
-    generate.add_argument("--count", type=positive_int, default=5, help="quantidade de leituras (padrão: 5)")
-    generate.add_argument("--interval", type=non_negative_float, default=1.0, help="segundos entre leituras (padrão: 1)")
-    generate.add_argument("--device-id", default="sensor-sala-01", help="identificador do dispositivo")
-    generate.add_argument("--location", default="Sala de Aula", help="localização do dispositivo")
-    generate.add_argument("--output", type=Path, default=DEFAULT_DATA_FILE, help="arquivo JSONL de saída")
+    gerar = comandos.add_parser("generate", help="gera novas leituras ambientais")
+    gerar.add_argument("--count", type=inteiro_positivo, default=5, help="quantidade de leituras")
+    gerar.add_argument("--interval", type=numero_nao_negativo, default=1.0, help="intervalo em segundos")
+    gerar.add_argument("--device-id", default="sensor-sala-01", help="identificador do sensor")
+    gerar.add_argument("--location", default="Sala de Aula", help="local monitorado")
+    gerar.add_argument("--output", type=Path, default=ARQUIVO_PADRAO, help="arquivo de saída")
 
-    read = subparsers.add_parser("read", help="lê o histórico armazenado")
-    read.add_argument("--input", type=Path, default=DEFAULT_DATA_FILE, help="arquivo JSONL de entrada")
-    read.add_argument("--limit", type=positive_int, help="exibe somente as últimas N leituras")
-    return parser
+    consultar = comandos.add_parser("read", help="consulta leituras já armazenadas")
+    consultar.add_argument("--input", type=Path, default=ARQUIVO_PADRAO, help="arquivo de entrada")
+    consultar.add_argument("--limit", type=inteiro_positivo, help="número máximo de registros exibidos")
+
+    return analisador
 
 
-def run_generate(args: argparse.Namespace) -> int:
-    sensor = EnvironmentalSensor(device_id=args.device_id, location=args.location)
-    print(f"Sensor {args.device_id!r} iniciado em {args.location!r}.")
-    print(f"Gravando {args.count} leitura(s) em {args.output}.")
+def gerar_leituras(argumentos: argparse.Namespace) -> int:
+    sensor = SensorAmbientalVirtual(
+        identificador=argumentos.device_id,
+        local=argumentos.location,
+    )
+
+    print(f"Sensor: {sensor.identificador}")
+    print(f"Local: {sensor.local}")
 
     try:
-        for index in range(args.count):
-            reading = sensor.collect()
-            append_reading(args.output, reading)
-            print(json.dumps(reading.to_dict(), ensure_ascii=False))
-            if index < args.count - 1 and args.interval:
-                time.sleep(args.interval)
+        for posicao in range(argumentos.count):
+            leitura = sensor.medir()
+            salvar_leitura(argumentos.output, leitura)
+            print(json.dumps(leitura.como_dicionario(), ensure_ascii=False))
+
+            ultima_leitura = posicao == argumentos.count - 1
+            if not ultima_leitura and argumentos.interval > 0:
+                time.sleep(argumentos.interval)
     except KeyboardInterrupt:
-        print("\nColeta interrompida pelo usuário; leituras anteriores foram preservadas.")
+        print("\nColeta encerrada.")
         return 130
 
-    print("Coleta concluída.")
+    print(f"{argumentos.count} leitura(s) gravada(s) em {argumentos.output}.")
     return 0
 
 
-def run_read(args: argparse.Namespace) -> int:
+def consultar_historico(argumentos: argparse.Namespace) -> int:
     try:
-        readings = read_readings(args.input)
-    except (FileNotFoundError, ValueError) as error:
-        print(f"Erro: {error}", file=sys.stderr)
+        leituras = carregar_leituras(argumentos.input)
+    except (FileNotFoundError, ValueError) as erro:
+        print(f"Erro: {erro}", file=sys.stderr)
         return 1
 
-    if args.limit:
-        readings = readings[-args.limit :]
-    if not readings:
-        print("Nenhuma leitura encontrada.")
+    if argumentos.limit is not None:
+        leituras = leituras[-argumentos.limit :]
+
+    if not leituras:
+        print("O arquivo não possui leituras.")
         return 0
 
-    print(format_readings(readings))
-    print(f"Total exibido: {len(readings)} leitura(s).")
+    for leitura in leituras:
+        print(json.dumps(leitura, ensure_ascii=False))
+
+    print(f"Total: {len(leituras)} leitura(s).")
     return 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    if args.command == "generate":
-        return run_generate(args)
-    return run_read(args)
+    argumentos = criar_analisador().parse_args(argv)
+    if argumentos.comando == "generate":
+        return gerar_leituras(argumentos)
+    return consultar_historico(argumentos)

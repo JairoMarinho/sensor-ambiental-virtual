@@ -5,7 +5,7 @@ description = "Sensor virtual de temperatura e umidade para a camada de percepç
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Equipe IN1061" }]
+authors = [{ name = "Jairo Marinho" }]
 dependencies = []
 
 [project.scripts]

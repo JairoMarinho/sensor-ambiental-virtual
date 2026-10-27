@@ -3,39 +3,40 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from src.sensor_virtual.sensor import SensorReading
-from src.sensor_virtual.storage import append_reading, read_readings
+from src.sensor_virtual.sensor import LeituraAmbiental
+from src.sensor_virtual.storage import carregar_leituras, salvar_leitura
 
 
-class StorageTest(unittest.TestCase):
+class TesteArmazenamento(unittest.TestCase):
     def setUp(self) -> None:
-        self.reading = SensorReading(
-            device_id="test-01",
-            location="Sala",
-            timestamp="2026-09-29T12:00:00+00:00",
-            temperature_c=25.0,
-            humidity_percent=60.0,
-            status="confortavel",
+        self.leitura = LeituraAmbiental(
+            identificador="teste-01",
+            local="Sala de teste",
+            data_hora="2026-10-27T12:30:00+00:00",
+            temperatura_c=25.2,
+            umidade_percentual=58.0,
+            situacao="confortavel",
         )
 
-    def test_append_and_read_round_trip(self) -> None:
-        with TemporaryDirectory() as directory:
-            path = Path(directory) / "nested" / "readings.jsonl"
-            append_reading(path, self.reading)
-            append_reading(path, self.reading)
+    def test_leitura_e_gravacao_do_arquivo(self) -> None:
+        with TemporaryDirectory() as diretorio:
+            arquivo = Path(diretorio) / "dados" / "leituras.jsonl"
+            salvar_leitura(arquivo, self.leitura)
+            salvar_leitura(arquivo, self.leitura)
 
-            values = read_readings(path)
+            registros = carregar_leituras(arquivo)
 
-            self.assertEqual(len(values), 2)
-            self.assertEqual(values[0], self.reading.to_dict())
+            self.assertEqual(len(registros), 2)
+            self.assertEqual(registros[0], self.leitura.como_dicionario())
 
-    def test_invalid_json_reports_line(self) -> None:
-        with TemporaryDirectory() as directory:
-            path = Path(directory) / "readings.jsonl"
-            path.write_text(json.dumps(self.reading.to_dict()) + "\ninvalid\n", encoding="utf-8")
+    def test_erro_indica_a_linha_com_json_invalido(self) -> None:
+        with TemporaryDirectory() as diretorio:
+            arquivo = Path(diretorio) / "leituras.jsonl"
+            conteudo = json.dumps(self.leitura.como_dicionario()) + "\ntexto inválido\n"
+            arquivo.write_text(conteudo, encoding="utf-8")
 
             with self.assertRaisesRegex(ValueError, "linha 2"):
-                read_readings(path)
+                carregar_leituras(arquivo)
 
 
 if __name__ == "__main__":

@@ -1,45 +1,39 @@
-"""Persistência local das leituras do sensor."""
-
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Iterable
 
-from .sensor import SensorReading
-
-
-def append_reading(path: Path, reading: SensorReading) -> None:
-    """Acrescenta uma leitura ao arquivo JSON Lines."""
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as stream:
-        json.dump(reading.to_dict(), stream, ensure_ascii=False, separators=(",", ":"))
-        stream.write("\n")
+from .sensor import LeituraAmbiental
 
 
-def read_readings(path: Path) -> list[dict[str, object]]:
-    """Lê e valida superficialmente todas as linhas de um arquivo JSONL."""
+def salvar_leitura(arquivo: Path, leitura: LeituraAmbiental) -> None:
+    arquivo.parent.mkdir(parents=True, exist_ok=True)
+    linha = json.dumps(leitura.como_dicionario(), ensure_ascii=False)
 
-    if not path.exists():
-        raise FileNotFoundError(f"arquivo de leituras não encontrado: {path}")
+    with arquivo.open("a", encoding="utf-8") as saida:
+        saida.write(linha + "\n")
 
-    readings: list[dict[str, object]] = []
-    with path.open("r", encoding="utf-8") as stream:
-        for line_number, line in enumerate(stream, start=1):
-            if not line.strip():
+
+def carregar_leituras(arquivo: Path) -> list[dict[str, object]]:
+    if not arquivo.is_file():
+        raise FileNotFoundError(f"arquivo de leituras não encontrado: {arquivo}")
+
+    leituras: list[dict[str, object]] = []
+    with arquivo.open(encoding="utf-8") as entrada:
+        for numero_linha, linha in enumerate(entrada, start=1):
+            if not linha.strip():
                 continue
+
             try:
-                value = json.loads(line)
-            except json.JSONDecodeError as error:
-                raise ValueError(f"JSON inválido na linha {line_number}: {error.msg}") from error
-            if not isinstance(value, dict):
-                raise ValueError(f"leitura inválida na linha {line_number}: esperado objeto JSON")
-            readings.append(value)
-    return readings
+                registro = json.loads(linha)
+            except json.JSONDecodeError as erro:
+                raise ValueError(
+                    f"conteúdo inválido na linha {numero_linha}: {erro.msg}"
+                ) from erro
 
+            if not isinstance(registro, dict):
+                raise ValueError(f"a linha {numero_linha} não contém um objeto JSON")
 
-def format_readings(readings: Iterable[dict[str, object]]) -> str:
-    """Formata leituras para inspeção humana no terminal."""
+            leituras.append(registro)
 
-    return "\n".join(json.dumps(item, ensure_ascii=False) for item in readings)
+    return leituras

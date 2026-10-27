@@ -4,7 +4,7 @@ Versão inicial de um dispositivo virtual da camada de percepção (*Perception 
 
 ## Descrição do projeto
 
-O projeto simula um sensor IoT ambiental instalado em uma sala de aula. O dispositivo produz leituras periódicas de temperatura e umidade, exibe cada medição no terminal e a armazena localmente em formato JSON Lines (`.jsonl`). Também é possível consultar as leituras já registradas.
+O projeto representa, em software, um sensor ambiental instalado em uma sala de aula. A cada coleta são gerados valores de temperatura e umidade. As leituras aparecem no terminal e ficam registradas em um arquivo JSON Lines (`.jsonl`) para consulta posterior.
 
 ### Problema abordado
 
@@ -103,7 +103,7 @@ Gere cinco leituras, uma por segundo:
 python3 -m src.sensor_virtual generate --count 5 --interval 1
 ```
 
-As medições aparecem no terminal e são acrescentadas a `data/readings.jsonl`. Para uma demonstração imediata, use intervalo zero:
+As medições aparecem no terminal e são acrescentadas a `data/leituras.jsonl`. Para uma demonstração imediata, use intervalo zero:
 
 ```bash
 python3 -m src.sensor_virtual generate --count 3 --interval 0
@@ -132,7 +132,7 @@ python3 -m src.sensor_virtual read --input data/sala-b205.jsonl --limit 2
 Cada linha possui um objeto JSON independente, por exemplo:
 
 ```json
-{"device_id":"sensor-sala-01","location":"Sala de Aula","timestamp":"2026-09-29T17:30:00+00:00","temperature_c":25.4,"humidity_percent":61.2,"status":"confortavel"}
+{"identificador":"sensor-sala-01","local":"Sala de Aula","data_hora":"2026-10-27T17:30:00+00:00","temperatura_c":25.4,"umidade_percentual":61.2,"situacao":"confortavel"}
 ```
 
 ### 4. Executar os testes
@@ -160,7 +160,7 @@ Condições simuladas -> Sensor virtual -> Validação -> Terminal + arquivo JSO
 ## Decisões técnicas
 
 - **Python:** facilita a execução e a apresentação do protótipo.
-- **Passeio aleatório limitado:** evita saltos irreais entre medições consecutivas.
+- **Variação limitada:** evita mudanças bruscas entre medições consecutivas.
 - **JSON Lines:** cada leitura é independente, permitindo acréscimo contínuo e processamento incremental.
 - **Biblioteca padrão:** reduz a preparação necessária para executar o projeto.
 

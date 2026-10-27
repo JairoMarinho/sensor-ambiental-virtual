@@ -2,42 +2,45 @@ from datetime import datetime, timezone
 import random
 import unittest
 
-from src.sensor_virtual.sensor import EnvironmentalSensor
+from src.sensor_virtual.sensor import SensorAmbientalVirtual
 
 
-class EnvironmentalSensorTest(unittest.TestCase):
-    def test_collect_returns_complete_deterministic_reading(self) -> None:
-        instant = datetime(2026, 9, 29, 12, 0, tzinfo=timezone.utc)
-        sensor = EnvironmentalSensor(
-            device_id="test-01",
-            location="Laboratório",
-            random_source=random.Random(7),
-            clock=lambda: instant,
+class TesteSensorAmbiental(unittest.TestCase):
+    def test_leitura_possui_dados_do_sensor(self) -> None:
+        instante = datetime(2026, 10, 27, 12, 30, tzinfo=timezone.utc)
+        sensor = SensorAmbientalVirtual(
+            identificador="sala-02",
+            local="Laboratório 2",
+            gerador=random.Random(12),
+            relogio=lambda: instante,
         )
 
-        reading = sensor.collect()
+        leitura = sensor.medir()
 
-        self.assertEqual(reading.device_id, "test-01")
-        self.assertEqual(reading.location, "Laboratório")
-        self.assertEqual(reading.timestamp, "2026-09-29T12:00:00+00:00")
-        self.assertGreaterEqual(reading.temperature_c, 15.0)
-        self.assertLessEqual(reading.temperature_c, 40.0)
-        self.assertGreaterEqual(reading.humidity_percent, 20.0)
-        self.assertLessEqual(reading.humidity_percent, 100.0)
-        self.assertEqual(reading.status, "confortavel")
+        self.assertEqual(leitura.identificador, "sala-02")
+        self.assertEqual(leitura.local, "Laboratório 2")
+        self.assertEqual(leitura.data_hora, "2026-10-27T12:30:00+00:00")
+        self.assertGreaterEqual(leitura.temperatura_c, 15.0)
+        self.assertLessEqual(leitura.temperatura_c, 40.0)
+        self.assertGreaterEqual(leitura.umidade_percentual, 20.0)
+        self.assertLessEqual(leitura.umidade_percentual, 100.0)
 
-    def test_classification_thresholds(self) -> None:
-        self.assertEqual(EnvironmentalSensor.classify(30.0, 50.0), "alerta_calor")
-        self.assertEqual(EnvironmentalSensor.classify(18.0, 50.0), "alerta_frio")
-        self.assertEqual(EnvironmentalSensor.classify(25.0, 80.0), "alerta_umidade_alta")
-        self.assertEqual(EnvironmentalSensor.classify(25.0, 30.0), "alerta_umidade_baixa")
-        self.assertEqual(EnvironmentalSensor.classify(25.0, 50.0), "confortavel")
+    def test_classificacao_das_condicoes_ambientais(self) -> None:
+        classificar = SensorAmbientalVirtual.classificar
 
-    def test_invalid_initial_values_are_rejected(self) -> None:
+        self.assertEqual(classificar(31.0, 50.0), "calor")
+        self.assertEqual(classificar(17.0, 50.0), "frio")
+        self.assertEqual(classificar(25.0, 85.0), "umidade_alta")
+        self.assertEqual(classificar(25.0, 25.0), "umidade_baixa")
+        self.assertEqual(classificar(24.0, 55.0), "confortavel")
+
+    def test_valores_iniciais_invalidos_sao_rejeitados(self) -> None:
         with self.assertRaises(ValueError):
-            EnvironmentalSensor(device_id="")
+            SensorAmbientalVirtual(identificador=" ")
         with self.assertRaises(ValueError):
-            EnvironmentalSensor(initial_temperature=50.0)
+            SensorAmbientalVirtual(temperatura_inicial=50.0)
+        with self.assertRaises(ValueError):
+            SensorAmbientalVirtual(umidade_inicial=10.0)
 
 
 if __name__ == "__main__":
