@@ -1,10 +1,10 @@
-# Sensor Ambiental Virtual - IN1061
+# Sistema IoT de Monitoramento Ambiental - IN1061
 
-Versão inicial de um dispositivo virtual da camada de percepção (*Perception Layer*) para a disciplina **IN1061 - Tópicos Avançados em Sistemas Distribuídos 2: IoT, Tecnologias, Arquiteturas e Aplicações**.
+Projeto acadêmico de um sistema IoT para acompanhamento de temperatura e umidade em ambientes internos, desenvolvido para a disciplina **IN1061 - Tópicos Avançados em Sistemas Distribuídos 2: IoT, Tecnologias, Arquiteturas e Aplicações**.
 
 ## Descrição do projeto
 
-O projeto representa, em software, um sensor ambiental instalado em uma sala de aula. A cada coleta são gerados valores de temperatura e umidade. As leituras aparecem no terminal e ficam registradas em um arquivo JSON Lines (`.jsonl`) para consulta posterior.
+O sistema representa, em software, um sensor ambiental instalado em uma sala de aula. A cada coleta são gerados valores de temperatura e umidade. As leituras podem ser consultadas no terminal ou acompanhadas em um dashboard web que atualiza os indicadores automaticamente.
 
 ### Problema abordado
 
@@ -12,11 +12,11 @@ Ambientes de estudo desconfortáveis podem prejudicar a concentração e o bem-e
 
 ### Ideia central
 
-Criar um sensor virtual que represente a primeira camada de uma solução IoT. Nesta Entrega 01, ele simula a coleta e a leitura dos dados. Em etapas futuras, as medições poderão ser enviadas a uma plataforma IoT, por exemplo via MQTT, e apresentadas em um dashboard.
+Construir as partes do sistema de forma progressiva. O sensor virtual representa a camada de percepção, o MQTT foi definido como protocolo de comunicação entre sensor e servidor, e o dashboard oferece a primeira interface de monitoramento. Nesta versão, o servidor local utiliza diretamente o sensor para viabilizar a demonstração; a conexão com um broker MQTT será incorporada na evolução do projeto.
 
-### Escopo da Entrega 01
+### Escopo das entregas
 
-Incluído:
+**Entrega 01:**
 
 - geração de temperatura e umidade com variações graduais e limites realistas;
 - data e hora em UTC, identificador e localização do dispositivo;
@@ -25,11 +25,20 @@ Incluído:
 - consulta do histórico pelo terminal;
 - interface de linha de comando e testes automatizados.
 
-Fora do escopo desta entrega:
+**Entrega 02:**
+
+- documento de arquitetura com o fluxo de dados;
+- conectividade Wi-Fi sobre a pilha TCP/IP;
+- paradigma Publish/Subscribe com protocolo MQTT;
+- servidor HTTP local para a interface;
+- dashboard responsivo com leitura atual, estado e histórico recente;
+- teste automatizado da resposta JSON usada pelo dashboard.
+
+Fora do escopo atual:
 
 - sensor físico;
-- broker MQTT ou plataforma IoT;
-- banco de dados remoto, API web ou dashboard;
+- implantação do broker MQTT;
+- banco de dados remoto;
 - autenticação e implantação em nuvem.
 
 ## Requisitos funcionais
@@ -53,7 +62,16 @@ Fora do escopo desta entrega:
 .
 ├── data/
 │   └── .gitkeep
+├── dashboard/
+│   ├── app.js
+│   ├── index.html
+│   └── styles.css
+├── docs/
+│   └── arquitetura-entrega-02.pdf
 ├── src/
+│   ├── dashboard/
+│   │   ├── __init__.py
+│   │   └── server.py
 │   └── sensor_virtual/
 │       ├── __init__.py
 │       ├── __main__.py
@@ -62,6 +80,7 @@ Fora do escopo desta entrega:
 │       └── sensor.py
 ├── tests/
 │   ├── __init__.py
+│   ├── test_dashboard.py
 │   ├── test_sensor.py
 │   └── test_storage.py
 ├── .gitignore
@@ -135,13 +154,29 @@ Cada linha possui um objeto JSON independente, por exemplo:
 {"identificador":"sensor-sala-01","local":"Sala de Aula","data_hora":"2026-10-27T17:30:00+00:00","temperatura_c":25.4,"umidade_percentual":61.2,"situacao":"confortavel"}
 ```
 
-### 4. Executar os testes
+### 4. Abrir o dashboard
+
+Inicie o servidor local:
+
+```bash
+python3 -m src.dashboard.server
+```
+
+Depois, acesse no navegador:
+
+```text
+http://127.0.0.1:8000
+```
+
+A página consulta uma nova leitura a cada três segundos. Para encerrar, volte ao terminal e pressione `Ctrl+C`.
+
+### 5. Executar os testes
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-### 5. Ver todas as opções
+### 6. Ver todas as opções
 
 ```bash
 python3 -m src.sensor_virtual --help
@@ -152,9 +187,9 @@ python3 -m src.sensor_virtual read --help
 ## Fluxo da solução
 
 ```text
-Condições simuladas -> Sensor virtual -> Validação -> Terminal + arquivo JSONL
-                                                           |
-                                                           +-> futura plataforma IoT
+Ambiente -> Sensor virtual -> MQTT Broker -> Servidor -> Dashboard
+              |                              |
+              +-> JSON Lines                 +-> API HTTP/JSON
 ```
 
 ## Decisões técnicas
@@ -163,10 +198,13 @@ Condições simuladas -> Sensor virtual -> Validação -> Terminal + arquivo JSO
 - **Variação limitada:** evita mudanças bruscas entre medições consecutivas.
 - **JSON Lines:** cada leitura é independente, permitindo acréscimo contínuo e processamento incremental.
 - **Biblioteca padrão:** reduz a preparação necessária para executar o projeto.
+- **Wi-Fi:** conectividade prevista para o dispositivo no ambiente monitorado.
+- **MQTT:** comunicação Publish/Subscribe, adequada ao envio contínuo de eventos de sensoriamento.
+- **HTTP:** entrega da interface e consulta das leituras pelo navegador.
 
 ## Evolução futura
 
-Uma próxima entrega pode substituir ou complementar o armazenamento local por publicação MQTT, conectar uma plataforma IoT e criar um dashboard. A estrutura atual separa geração e persistência para facilitar essa evolução sem alterar a responsabilidade do sensor.
+A próxima evolução deve conectar o sensor a um broker MQTT, implementar o consumidor no servidor e conservar o histórico em um banco de dados. A separação atual permite realizar essas mudanças sem alterar a interface do dashboard.
 
 ## Licença
 
