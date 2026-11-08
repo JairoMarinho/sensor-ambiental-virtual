@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Painel de monitoramento do sensor ambiental virtual" />
+    <title>Painel Ambiental | IN1061</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topo">
+      <div>
+        <p class="disciplina">IN1061 · Sistemas IoT para Cidades Inteligentes</p>
+        <h1>Painel Ambiental</h1>
+        <p class="subtitulo">Acompanhamento das condições da sala monitorada</p>
+      </div>
+      <div class="conexao" aria-live="polite">
+        <span class="ponto" id="ponto-conexao"></span>
+        <span id="texto-conexao">Conectando</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="identificacao" aria-label="Identificação do sensor">
+        <div>
+          <span>Dispositivo</span>
+          <strong id="identificador">sensor-sala-01</strong>
+        </div>
+        <div>
+          <span>Local</span>
+          <strong id="local">Sala de Aula</strong>
+        </div>
+        <div>
+          <span>Última atualização</span>
+          <strong id="atualizacao">--:--:--</strong>
+        </div>
+      </section>
+
+      <section class="metricas" aria-label="Leituras atuais">
+        <article class="cartao temperatura">
+          <div class="icone" aria-hidden="true">°C</div>
+          <div>
+            <p>Temperatura</p>
+            <strong><span id="temperatura">--</span><small> °C</small></strong>
+            <span class="faixa">Faixa monitorada: 15 a 40 °C</span>
+          </div>
+        </article>
+
+        <article class="cartao umidade">
+          <div class="icone" aria-hidden="true">%</div>
+          <div>
+            <p>Umidade relativa</p>
+            <strong><span id="umidade">--</span><small> %</small></strong>
+            <span class="faixa">Faixa monitorada: 20 a 100%</span>
+          </div>
+        </article>
+
+        <article class="cartao situacao">
+          <div class="icone" aria-hidden="true">●</div>
+          <div>
+            <p>Condição ambiental</p>
+            <strong id="situacao">Aguardando</strong>
+            <span class="faixa">Classificação do sensor virtual</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="painel-inferior">
+        <article class="grafico-container">
+          <div class="titulo-secao">
+            <div>
+              <p>Comportamento recente</p>
+              <h2>Temperatura nas últimas leituras</h2>
+            </div>
+            <span>Atualização a cada 3 s</span>
+          </div>
+          <svg id="grafico" viewBox="0 0 680 220" role="img" aria-label="Gráfico das últimas temperaturas">
+            <line x1="45" y1="20" x2="45" y2="185" class="eixo" />
+            <line x1="45" y1="185" x2="655" y2="185" class="eixo" />
+            <polyline id="linha-grafico" points="" class="linha" />
+            <g id="pontos-grafico"></g>
+            <text x="18" y="28">30°</text>
+            <text x="18" y="107">25°</text>
+            <text x="18" y="188">20°</text>
+          </svg>
+        </article>
+
+        <article class="historico-container">
+          <div class="titulo-secao">
+            <div>
+              <p>Eventos</p>
+              <h2>Histórico recente</h2>
+            </div>
+          </div>
+          <ul id="historico" class="historico" aria-live="polite"></ul>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <span>Sensor virtual</span><b>→</b><span>MQTT Broker</span><b>→</b><span>Servidor</span><b>→</b><span>Dashboard</span>
+    </footer>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
