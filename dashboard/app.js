@@ -55,8 +55,13 @@ function atualizarHistorico() {
 }
 
 function exibirLeitura(leitura) {
-  estado.leituras.push(leitura);
-  estado.leituras = estado.leituras.slice(-estado.maximo);
+  const chave = `${leitura.identificador}:${leitura.data_hora}`;
+  const ultima = estado.leituras.at(-1);
+  const chaveUltima = ultima ? `${ultima.identificador}:${ultima.data_hora}` : null;
+  if (chave !== chaveUltima) {
+    estado.leituras.push(leitura);
+    estado.leituras = estado.leituras.slice(-estado.maximo);
+  }
 
   elementos.identificador.textContent = leitura.identificador;
   elementos.local.textContent = leitura.local;
@@ -74,7 +79,12 @@ function exibirLeitura(leitura) {
 async function obterLeitura() {
   try {
     const resposta = await fetch("/api/leitura", { cache: "no-store" });
-    if (!resposta.ok) throw new Error("Falha ao consultar o sensor");
+    if (resposta.status === 503) {
+      elementos.conexao.className = "conexao";
+      elementos.textoConexao.textContent = "Aguardando sensor";
+      return;
+    }
+    if (!resposta.ok) throw new Error("Falha ao consultar o coletor");
     exibirLeitura(await resposta.json());
   } catch (erro) {
     elementos.conexao.className = "conexao erro";

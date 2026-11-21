@@ -7,8 +7,12 @@ from .sensor import LeituraAmbiental
 
 
 def salvar_leitura(arquivo: Path, leitura: LeituraAmbiental) -> None:
+    salvar_registro(arquivo, leitura.como_dicionario())
+
+
+def salvar_registro(arquivo: Path, registro: dict[str, object]) -> None:
     arquivo.parent.mkdir(parents=True, exist_ok=True)
-    linha = json.dumps(leitura.como_dicionario(), ensure_ascii=False)
+    linha = json.dumps(registro, ensure_ascii=False)
 
     with arquivo.open("a", encoding="utf-8") as saida:
         saida.write(linha + "\n")

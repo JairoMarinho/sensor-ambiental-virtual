@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Painel de monitoramento do sensor ambiental virtual" />
+    <meta name="description" content="Painel IoT de temperatura e umidade com ESP32 e DHT22" />
     <title>Painel Ambiental | IN1061</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
@@ -60,7 +60,7 @@
           <div>
             <p>Condição ambiental</p>
             <strong id="situacao">Aguardando</strong>
-            <span class="faixa">Classificação do sensor virtual</span>
+            <span class="faixa">Classificação do servidor</span>
           </div>
         </article>
       </section>
@@ -98,7 +98,7 @@
     </main>
 
     <footer>
-      <span>Sensor virtual</span><b>→</b><span>MQTT Broker</span><b>→</b><span>Servidor</span><b>→</b><span>Dashboard</span>
+      <span>ESP32 + DHT22</span><b>→</b><span>MQTT Broker</span><b>→</b><span>Servidor</span><b>→</b><span>Dashboard</span>
     </footer>
 
     <script src="/app.js" defer></script>
