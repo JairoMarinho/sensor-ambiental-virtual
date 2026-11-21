@@ -1,210 +1,201 @@
-# Sistema IoT de Monitoramento Ambiental - IN1061
+# SAVF-ESP32 — Sistema IoT de Monitoramento Ambiental
 
-Projeto acadêmico de um sistema IoT para acompanhamento de temperatura e umidade em ambientes internos, desenvolvido para a disciplina **IN1061 - Tópicos Avançados em Sistemas Distribuídos 2: IoT, Tecnologias, Arquiteturas e Aplicações**.
+Projeto acadêmico desenvolvido para a disciplina **IN1061 — Tópicos Avançados em Sistemas Distribuídos 2: IoT, Tecnologias, Arquiteturas e Aplicações**, do Centro de Informática da Universidade Federal de Pernambuco.
 
 ## Descrição do projeto
 
-O sistema representa, em software, um sensor ambiental instalado em uma sala de aula. A cada coleta são gerados valores de temperatura e umidade. As leituras podem ser consultadas no terminal ou acompanhadas em um dashboard web que atualiza os indicadores automaticamente.
+O SAVF-ESP32 acompanha temperatura e umidade em um ambiente interno. Um ESP32 conectado a um DHT22 coleta as medições e publica eventos em um broker MQTT. O servidor Python valida e armazena os eventos, enquanto o dashboard consulta a leitura mais recente por HTTP e a apresenta em cartões, gráfico e histórico.
 
-### Problema abordado
+O projeto preserva um sensor virtual para testes sem o hardware. Tanto o publicador virtual quanto o ESP32 utilizam o mesmo tópico e o mesmo objeto JSON, permitindo verificar separadamente o broker, o servidor e o dashboard.
 
-Ambientes de estudo desconfortáveis podem prejudicar a concentração e o bem-estar. Sem instrumentação, não há um histórico objetivo das condições ambientais que permita identificar períodos de calor ou umidade inadequada.
+## Problema resolvido
 
-### Ideia central
+Sem instrumentação, as condições térmicas de uma sala são avaliadas apenas pela percepção dos ocupantes e não formam um histórico verificável. O sistema transforma as medições do ambiente em eventos datados, mantém os registros e disponibiliza uma visualização atualizada.
 
-Construir as partes do sistema de forma progressiva. O sensor virtual representa a camada de percepção, o MQTT foi definido como protocolo de comunicação entre sensor e servidor, e o dashboard oferece a primeira interface de monitoramento. Nesta versão, o servidor local utiliza diretamente o sensor para viabilizar a demonstração; a conexão com um broker MQTT será incorporada na evolução do projeto.
+## Fluxo de dados
 
-### Escopo das entregas
+```text
+DHT22 → ESP32 → Wi-Fi → Broker MQTT → Servidor Python → API HTTP → Dashboard
+                                      └──────────────→ JSON Lines
+```
 
-**Entrega 01:**
+Durante testes, o publicador virtual pode ocupar o lugar do ESP32:
 
-- geração de temperatura e umidade com variações graduais e limites realistas;
-- data e hora em UTC, identificador e localização do dispositivo;
-- classificação simples da condição ambiental;
-- persistência das leituras em JSON Lines;
-- consulta do histórico pelo terminal;
-- interface de linha de comando e testes automatizados.
+```text
+Sensor virtual → Broker MQTT → Servidor Python → Dashboard
+```
 
-**Entrega 02:**
+## Tecnologias escolhidas
 
-- documento de arquitetura com o fluxo de dados;
-- conectividade Wi-Fi sobre a pilha TCP/IP;
-- paradigma Publish/Subscribe com protocolo MQTT;
-- servidor HTTP local para a interface;
-- dashboard responsivo com leitura atual, estado e histórico recente;
-- teste automatizado da resposta JSON usada pelo dashboard.
+- **ESP32:** unidade de processamento e conectividade Wi-Fi do nó físico.
+- **DHT22/AM2302:** aquisição de temperatura e umidade relativa.
+- **C++ com framework Arduino:** firmware do nó físico.
+- **MQTT com QoS 1:** comunicação Publish/Subscribe entre o coletor e o servidor.
+- **Eclipse Mosquitto:** broker MQTT local usado na demonstração.
+- **Python 3.10 ou superior:** servidor, validação, persistência e avaliação.
+- **HTML, CSS e JavaScript:** interface de acompanhamento no navegador.
 
-Fora do escopo atual:
-
-- sensor físico;
-- implantação do broker MQTT;
-- banco de dados remoto;
-- autenticação e implantação em nuvem.
-
-## Requisitos funcionais
-
-- **RF01:** gerar leituras de temperatura e umidade.
-- **RF02:** associar metadados do dispositivo e instante da coleta a cada leitura.
-- **RF03:** armazenar as leituras localmente.
-- **RF04:** permitir a leitura do histórico armazenado.
-- **RF05:** permitir configurar quantidade, intervalo e arquivo de saída.
-
-## Requisitos não funcionais
-
-- **RNF01:** executar com Python 3.10 ou superior.
-- **RNF02:** utilizar somente a biblioteca padrão do Python.
-- **RNF03:** armazenar dados em formato textual, legível e fácil de integrar.
-- **RNF04:** manter código modular, documentado e testável.
-
-## Estrutura
+## Estrutura de pastas
 
 ```text
 .
-├── data/
-│   └── .gitkeep
-├── dashboard/
-│   ├── app.js
-│   ├── index.html
-│   └── styles.css
-├── docs/
-│   └── arquitetura-entrega-02.pdf
+├── dashboard/                    # Interface web
+├── data/                         # Leituras e resultados locais
+├── docs/                         # Documentos das entregas
+├── firmware/esp32_dht22/         # Código da placa e configuração de exemplo
+├── infra/mosquitto/              # Configuração do broker local
+├── scripts/teste_experimental.py # Coleta das métricas da avaliação
 ├── src/
-│   ├── dashboard/
-│   │   ├── __init__.py
-│   │   └── server.py
-│   └── sensor_virtual/
-│       ├── __init__.py
-│       ├── __main__.py
-│       ├── cli.py
-│       ├── storage.py
-│       └── sensor.py
-├── tests/
-│   ├── __init__.py
-│   ├── test_dashboard.py
-│   ├── test_sensor.py
-│   └── test_storage.py
-├── .gitignore
-├── LICENSE
+│   ├── dashboard/                # Servidor HTTP e API
+│   ├── experimentos/             # Cálculo das métricas
+│   ├── integracao/               # Validação e estado das leituras
+│   ├── mqtt/                     # Consumidor e publicador MQTT
+│   └── sensor_virtual/           # Fonte simulada e armazenamento
+├── tests/                        # Testes unitários e de integração
+├── compose.yaml                  # Broker Mosquitto
 ├── pyproject.toml
 └── README.md
 ```
 
-## Como executar
+## Contrato de dados
 
-### 1. Preparar o ambiente
+O tópico padrão é `cidade/sala-01/ambiente`. Cada mensagem contém um objeto JSON:
 
-Clone o repositório, entre na pasta do projeto e confira o Python:
+```json
+{
+  "identificador": "esp32-sala-01",
+  "local": "Sala de Aula",
+  "data_hora": "2026-11-21T12:00:00Z",
+  "temperatura_c": 25.4,
+  "umidade_percentual": 61.2,
+  "situacao": "confortavel"
+}
+```
+
+O servidor rejeita campos ausentes, tipos incorretos, datas sem fuso, temperaturas fora da faixa do DHT22 e umidade fora de 0 a 100%. Mensagens com dispositivo, horário e valores idênticos não são gravadas duas vezes.
+
+## Como executar a aplicação
+
+### 1. Obter o projeto
 
 ```bash
 git clone https://github.com/JairoMarinho/sensor-ambiental-virtual.git
 cd sensor-ambiental-virtual
-python3 --version
 ```
 
-O projeto não possui dependências externas. A criação de um ambiente virtual é opcional:
+### 2. Preparar o Python
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python3 -m pip install -e .
 ```
 
-No Windows, ative com:
+No Windows, ative o ambiente com `.venv\Scripts\activate`.
 
-```powershell
-.venv\Scripts\activate
-```
+### 3. Iniciar o broker MQTT
 
-### 2. Gerar dados de sensoriamento
-
-Gere cinco leituras, uma por segundo:
+Com Docker Desktop aberto:
 
 ```bash
-python3 -m src.sensor_virtual generate --count 5 --interval 1
+docker compose up -d broker
+docker compose ps
 ```
 
-As medições aparecem no terminal e são acrescentadas a `data/leituras.jsonl`. Para uma demonstração imediata, use intervalo zero:
+A configuração permite acesso anônimo somente para facilitar a demonstração em uma rede local confiável. Ela não deve ser exposta à Internet. Uma implantação externa exige autenticação, autorização por tópico e TLS.
+
+### 4. Iniciar o servidor e o dashboard
 
 ```bash
-python3 -m src.sensor_virtual generate --count 3 --interval 0
+python3 -m src.dashboard.server --source mqtt
 ```
 
-Também é possível personalizar o dispositivo, a localização e o arquivo:
+Abra [http://127.0.0.1:8000](http://127.0.0.1:8000). O painel exibirá **Aguardando sensor** até a primeira mensagem MQTT válida.
+
+### 5. Testar sem a placa
+
+Em outro terminal, ative o mesmo ambiente virtual e publique dez leituras:
 
 ```bash
-python3 -m src.sensor_virtual generate --count 3 --interval 0 --device-id sala-b205 --location "Sala B205" --output data/sala-b205.jsonl
+python3 -m src.mqtt.publisher --count 10 --interval 2
 ```
 
-Use `Ctrl+C` para encerrar com segurança uma geração em andamento.
+As amostras devem aparecer no terminal do servidor, no dashboard e em `data/leituras-mqtt.jsonl`. Esse teste percorre o mesmo broker, consumidor, API e dashboard usados pelo hardware.
 
-### 3. Ler os dados armazenados
+### 6. Conectar o ESP32 e o DHT22
 
-```bash
-python3 -m src.sensor_virtual read
-```
+Ligação de referência:
 
-Para ler outro arquivo ou limitar o resultado às últimas medições:
+| DHT22 | ESP32 |
+|---|---|
+| VCC | 3,3 V |
+| DATA | GPIO 4 |
+| GND | GND |
 
-```bash
-python3 -m src.sensor_virtual read --input data/sala-b205.jsonl --limit 2
-```
+Use um resistor de pull-up de 4,7 kΩ entre VCC e DATA quando ele não estiver presente no módulo.
 
-Cada linha possui um objeto JSON independente, por exemplo:
+1. Instale no Arduino IDE as bibliotecas **DHT sensor library**, da Adafruit, e **ArduinoMqttClient**, da Arduino.
+2. Abra `firmware/esp32_dht22/esp32_dht22.ino`.
+3. Copie `config.example.h` para `config.h` na mesma pasta.
+4. Preencha Wi-Fi e `MQTT_HOST` em `config.h`. Use o IP do computador na rede local, não `127.0.0.1`.
+5. Selecione a placa e a porta, compile e envie o firmware.
+6. Abra o Monitor Serial em `115200` baud e confirme as publicações JSON.
 
-```json
-{"identificador":"sensor-sala-01","local":"Sala de Aula","data_hora":"2026-10-27T17:30:00+00:00","temperatura_c":25.4,"umidade_percentual":61.2,"situacao":"confortavel"}
-```
+O arquivo `config.h` é ignorado pelo Git para evitar o envio da senha da rede.
 
-### 4. Abrir o dashboard
-
-Inicie o servidor local:
-
-```bash
-python3 -m src.dashboard.server
-```
-
-Depois, acesse no navegador:
-
-```text
-http://127.0.0.1:8000
-```
-
-A página consulta uma nova leitura a cada três segundos. Para encerrar, volte ao terminal e pressione `Ctrl+C`.
-
-### 5. Executar os testes
+### 7. Executar os testes automatizados
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-### 6. Ver todas as opções
+A suíte verifica geração, classificação, persistência, validação do payload MQTT, rejeição de valores inválidos, ausência inicial de leitura, deduplicação e o caminho completo `payload MQTT → repositório → API do dashboard`.
+
+## Teste experimental da solução
+
+Com broker, servidor e ESP32 em execução, abra outro terminal e rode:
 
 ```bash
-python3 -m src.sensor_virtual --help
-python3 -m src.sensor_virtual generate --help
-python3 -m src.sensor_virtual read --help
+python3 -m scripts.teste_experimental \
+  --duration 300 \
+  --sensor-interval 5 \
+  --poll-interval 1 \
+  --output data/resultado-experimento.json
 ```
 
-## Fluxo da solução
+O ensaio de cinco minutos espera 60 mensagens e calcula:
 
-```text
-Ambiente -> Sensor virtual -> MQTT Broker -> Servidor -> Dashboard
-              |                              |
-              +-> JSON Lines                 +-> API HTTP/JSON
+- quantidade recebida e quantidade única;
+- mensagens duplicadas;
+- completude percentual;
+- latência média e máxima entre coleta e consulta.
+
+Para o ensaio de uma hora descrito no artigo, altere `--duration` para `3600`. O resultado só deve ser incluído no relatório após a coleta com o ESP32 ligado; o repositório não apresenta números físicos fabricados.
+
+## Teste rápido sem MQTT
+
+Para verificar apenas o dashboard com a fonte virtual direta:
+
+```bash
+python3 -m src.dashboard.server --source virtual
 ```
 
-## Decisões técnicas
+Esse modo é útil para diagnóstico, mas não comprova o fluxo MQTT exigido na Entrega 3.
 
-- **Python:** facilita a execução e a apresentação do protótipo.
-- **Variação limitada:** evita mudanças bruscas entre medições consecutivas.
-- **JSON Lines:** cada leitura é independente, permitindo acréscimo contínuo e processamento incremental.
-- **Biblioteca padrão:** reduz a preparação necessária para executar o projeto.
-- **Wi-Fi:** conectividade prevista para o dispositivo no ambiente monitorado.
-- **MQTT:** comunicação Publish/Subscribe, adequada ao envio contínuo de eventos de sensoriamento.
-- **HTTP:** entrega da interface e consulta das leituras pelo navegador.
+## Encerrar os serviços
 
-## Evolução futura
+Encerre o servidor com `Ctrl+C` e pare o broker:
 
-A próxima evolução deve conectar o sensor a um broker MQTT, implementar o consumidor no servidor e conservar o histórico em um banco de dados. A separação atual permite realizar essas mudanças sem alterar a interface do dashboard.
+```bash
+docker compose down
+```
+
+## Limitações atuais
+
+- O DHT22 é adequado à prova de conceito, mas não substitui um instrumento calibrado.
+- O broker fornecido é destinado à rede local de demonstração.
+- Os resultados físicos dependem da montagem e da execução do experimento com o hardware.
+- O histórico utiliza arquivo local; uma implantação maior deve usar banco de séries temporais.
 
 ## Licença
 
