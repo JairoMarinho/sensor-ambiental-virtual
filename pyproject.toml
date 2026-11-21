@@ -1,7 +1,7 @@
 [project]
 name = "sensor-ambiental-virtual"
 version = "0.3.0"
-description = "Sistema IoT com ESP32, DHT22, MQTT e dashboard para monitoramento ambiental."
+description = "Sistema IoT com ESP32, DHT11, MQTT e dashboard para monitoramento ambiental."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

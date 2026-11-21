@@ -23,7 +23,7 @@ class TesteSensorAmbiental(unittest.TestCase):
         self.assertGreaterEqual(leitura.temperatura_c, 15.0)
         self.assertLessEqual(leitura.temperatura_c, 40.0)
         self.assertGreaterEqual(leitura.umidade_percentual, 20.0)
-        self.assertLessEqual(leitura.umidade_percentual, 100.0)
+        self.assertLessEqual(leitura.umidade_percentual, 95.0)
 
     def test_classificacao_das_condicoes_ambientais(self) -> None:
         classificar = SensorAmbientalVirtual.classificar

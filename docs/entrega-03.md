@@ -2,7 +2,7 @@
 
 ## Integração implementada
 
-O fluxo de dados da Entrega 3 utiliza o tópico MQTT `cidade/sala-01/ambiente`. O firmware do ESP32 lê o DHT22, acrescenta identificação e horário UTC e publica o objeto JSON. O servidor Python assina o tópico com QoS 1, valida o payload, elimina duplicatas, grava o histórico em JSON Lines e atualiza o estado consultado pela rota `/api/leitura`. O dashboard busca essa rota a cada três segundos.
+O fluxo de dados da Entrega 3 utiliza o tópico MQTT `cidade/sala-01/ambiente`. O firmware do ESP32 lê o DHT11, acrescenta identificação e horário UTC e publica o objeto JSON. O servidor Python assina o tópico com QoS 1, valida o payload, elimina duplicatas, grava o histórico em JSON Lines e atualiza o estado consultado pela rota `/api/leitura`. O dashboard busca essa rota a cada três segundos.
 
 O publicador virtual disponível em `src/mqtt/publisher.py` emite o mesmo contrato do ESP32. Ele permite testar broker, consumidor, persistência, API e dashboard antes de conectar o hardware, sem criar um caminho alternativo na aplicação.
 
@@ -17,7 +17,7 @@ A suíte de testes cobre:
 - cálculo de completude, duplicatas e latência;
 - geração, classificação e armazenamento do sensor virtual.
 
-Na verificação local de 21 de novembro de 2026, os 13 testes automatizados foram concluídos sem falhas. Também foi executado um ensaio de ponta a ponta com Mosquitto e `paho-mqtt`, no qual as publicações virtuais chegaram ao servidor, ao histórico e à API usada pelo dashboard. Essa verificação comprova a integração de software; as medições físicas continuam dependendo da montagem e da execução com o ESP32 e o DHT22.
+Na verificação local de 21 de novembro de 2026, os 13 testes automatizados foram concluídos sem falhas. Também foi executado um ensaio de ponta a ponta com Mosquitto e `paho-mqtt`, no qual as publicações virtuais chegaram ao servidor, ao histórico e à API usada pelo dashboard. Essa verificação comprova a integração de software; as medições físicas continuam dependendo da montagem e da execução com o ESP32 e o DHT11.
 
 Comando:
 

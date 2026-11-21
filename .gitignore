@@ -6,7 +6,7 @@ venv/
 *.egg-info/
 .env
 .DS_Store
-firmware/esp32_dht22/config.h
+firmware/esp32_dht11/config.h
 .idea/
 .vscode/
 .pytest_cache/

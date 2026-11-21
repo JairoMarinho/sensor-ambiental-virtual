@@ -9,7 +9,7 @@ from typing import Callable
 TEMPERATURA_MINIMA = 15.0
 TEMPERATURA_MAXIMA = 40.0
 UMIDADE_MINIMA = 20.0
-UMIDADE_MAXIMA = 100.0
+UMIDADE_MAXIMA = 95.0
 
 
 @dataclass(frozen=True)
@@ -42,7 +42,7 @@ class SensorAmbientalVirtual:
         if not TEMPERATURA_MINIMA <= temperatura_inicial <= TEMPERATURA_MAXIMA:
             raise ValueError("a temperatura inicial deve estar entre 15 e 40 °C")
         if not UMIDADE_MINIMA <= umidade_inicial <= UMIDADE_MAXIMA:
-            raise ValueError("a umidade inicial deve estar entre 20 e 100%")
+            raise ValueError("a umidade inicial deve estar entre 20 e 95%")
 
         self.identificador = identificador.strip()
         self.local = local.strip()

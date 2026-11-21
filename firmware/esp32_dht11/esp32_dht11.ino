@@ -6,7 +6,7 @@
 #include "config.h"
 
 constexpr uint8_t DHT_PIN = 4;
-constexpr uint8_t DHT_TYPE = DHT22;
+constexpr uint8_t DHT_TYPE = DHT11;
 constexpr unsigned long INTERVALO_LEITURA_MS = 5000;
 
 DHT dht(DHT_PIN, DHT_TYPE);
@@ -60,7 +60,7 @@ void publicarLeitura() {
   const float umidade = dht.readHumidity();
   const float temperatura = dht.readTemperature();
   if (isnan(temperatura) || isnan(umidade)) {
-    Serial.println("Leitura inválida do DHT22");
+    Serial.println("Leitura inválida do DHT11");
     return;
   }
 

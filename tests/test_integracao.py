@@ -90,7 +90,11 @@ class TesteIntegracaoEntrega3(unittest.TestCase):
 
     def test_rejeita_valores_fora_da_faixa(self) -> None:
         invalida = {**LEITURA, "umidade_percentual": 120}
-        with self.assertRaisesRegex(ValueError, "entre 0 e 100"):
+        with self.assertRaisesRegex(ValueError, "entre 5 e 95"):
+            normalizar_leitura(invalida)
+
+        invalida = {**LEITURA, "temperatura_c": 61}
+        with self.assertRaisesRegex(ValueError, "entre -20 e 60"):
             normalizar_leitura(invalida)
 
     def test_metricas_experimentais(self) -> None:

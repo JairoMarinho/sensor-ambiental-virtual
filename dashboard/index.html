@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Painel IoT de temperatura e umidade com ESP32 e DHT22" />
+    <meta name="description" content="Painel IoT de temperatura e umidade com ESP32 e DHT11" />
     <title>Painel Ambiental | IN1061</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
@@ -42,7 +42,7 @@
           <div>
             <p>Temperatura</p>
             <strong><span id="temperatura">--</span><small> °C</small></strong>
-            <span class="faixa">Faixa monitorada: 15 a 40 °C</span>
+            <span class="faixa">Faixa aceita: -20 a 60 °C</span>
           </div>
         </article>
 
@@ -51,7 +51,7 @@
           <div>
             <p>Umidade relativa</p>
             <strong><span id="umidade">--</span><small> %</small></strong>
-            <span class="faixa">Faixa monitorada: 20 a 100%</span>
+            <span class="faixa">Faixa aceita: 5 a 95%</span>
           </div>
         </article>
 
@@ -98,7 +98,7 @@
     </main>
 
     <footer>
-      <span>ESP32 + DHT22</span><b>→</b><span>MQTT Broker</span><b>→</b><span>Servidor</span><b>→</b><span>Dashboard</span>
+      <span>ESP32 + DHT11</span><b>→</b><span>MQTT Broker</span><b>→</b><span>Servidor</span><b>→</b><span>Dashboard</span>
     </footer>
 
     <script src="/app.js" defer></script>

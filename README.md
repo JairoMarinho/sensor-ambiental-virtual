@@ -4,7 +4,7 @@ Projeto acadêmico desenvolvido para a disciplina **IN1061 — Tópicos Avançad
 
 ## Descrição do projeto
 
-O SAVF-ESP32 acompanha temperatura e umidade em um ambiente interno. Um ESP32 conectado a um DHT22 coleta as medições e publica eventos em um broker MQTT. O servidor Python valida e armazena os eventos, enquanto o dashboard consulta a leitura mais recente por HTTP e a apresenta em cartões, gráfico e histórico.
+O SAVF-ESP32 acompanha temperatura e umidade em um ambiente interno. Um ESP32 conectado a um módulo DHT11 coleta as medições e publica eventos em um broker MQTT. O servidor Python valida e armazena os eventos, enquanto o dashboard consulta a leitura mais recente por HTTP e a apresenta em cartões, gráfico e histórico.
 
 O projeto preserva um sensor virtual para testes sem o hardware. Tanto o publicador virtual quanto o ESP32 utilizam o mesmo tópico e o mesmo objeto JSON, permitindo verificar separadamente o broker, o servidor e o dashboard.
 
@@ -15,7 +15,7 @@ Sem instrumentação, as condições térmicas de uma sala são avaliadas apenas
 ## Fluxo de dados
 
 ```text
-DHT22 → ESP32 → Wi-Fi → Broker MQTT → Servidor Python → API HTTP → Dashboard
+DHT11 → ESP32 → Wi-Fi → Broker MQTT → Servidor Python → API HTTP → Dashboard
                                       └──────────────→ JSON Lines
 ```
 
@@ -28,7 +28,7 @@ Sensor virtual → Broker MQTT → Servidor Python → Dashboard
 ## Tecnologias escolhidas
 
 - **ESP32:** unidade de processamento e conectividade Wi-Fi do nó físico.
-- **DHT22/AM2302:** aquisição de temperatura e umidade relativa.
+- **DHT11:** aquisição de temperatura e umidade relativa.
 - **C++ com framework Arduino:** firmware do nó físico.
 - **MQTT com QoS 1:** comunicação Publish/Subscribe entre o coletor e o servidor.
 - **Eclipse Mosquitto:** broker MQTT local usado na demonstração.
@@ -42,7 +42,7 @@ Sensor virtual → Broker MQTT → Servidor Python → Dashboard
 ├── dashboard/                    # Interface web
 ├── data/                         # Leituras e resultados locais
 ├── docs/                         # Documentos das entregas
-├── firmware/esp32_dht22/         # Código da placa e configuração de exemplo
+├── firmware/esp32_dht11/         # Código da placa e configuração de exemplo
 ├── infra/mosquitto/              # Configuração do broker local
 ├── scripts/teste_experimental.py # Coleta das métricas da avaliação
 ├── src/
@@ -72,7 +72,7 @@ O tópico padrão é `cidade/sala-01/ambiente`. Cada mensagem contém um objeto 
 }
 ```
 
-O servidor rejeita campos ausentes, tipos incorretos, datas sem fuso, temperaturas fora da faixa do DHT22 e umidade fora de 0 a 100%. Mensagens com dispositivo, horário e valores idênticos não são gravadas duas vezes.
+O servidor rejeita campos ausentes, tipos incorretos, datas sem fuso e valores fora da faixa declarada pelo fabricante do DHT11: temperatura entre -20 e 60 °C e umidade relativa entre 5 e 95%. Mensagens com dispositivo, horário e valores idênticos não são gravadas duas vezes.
 
 ## Como executar a aplicação
 
@@ -122,11 +122,11 @@ python3 -m src.mqtt.publisher --count 10 --interval 2
 
 As amostras devem aparecer no terminal do servidor, no dashboard e em `data/leituras-mqtt.jsonl`. Esse teste percorre o mesmo broker, consumidor, API e dashboard usados pelo hardware.
 
-### 6. Conectar o ESP32 e o DHT22
+### 6. Conectar o ESP32 e o DHT11
 
 Ligação de referência:
 
-| DHT22 | ESP32 |
+| DHT11 | ESP32 |
 |---|---|
 | VCC | 3,3 V |
 | DATA | GPIO 4 |
@@ -135,7 +135,7 @@ Ligação de referência:
 Use um resistor de pull-up de 4,7 kΩ entre VCC e DATA quando ele não estiver presente no módulo.
 
 1. Instale no Arduino IDE as bibliotecas **DHT sensor library**, da Adafruit, e **ArduinoMqttClient**, da Arduino.
-2. Abra `firmware/esp32_dht22/esp32_dht22.ino`.
+2. Abra `firmware/esp32_dht11/esp32_dht11.ino`.
 3. Copie `config.example.h` para `config.h` na mesma pasta.
 4. Preencha Wi-Fi e `MQTT_HOST` em `config.h`. Use o IP do computador na rede local, não `127.0.0.1`.
 5. Selecione a placa e a porta, compile e envie o firmware.
@@ -192,7 +192,7 @@ docker compose down
 
 ## Limitações atuais
 
-- O DHT22 é adequado à prova de conceito, mas não substitui um instrumento calibrado.
+- O DHT11 é adequado à prova de conceito, mas sua exatidão e resolução não substituem um instrumento calibrado.
 - O broker fornecido é destinado à rede local de demonstração.
 - Os resultados físicos dependem da montagem e da execução do experimento com o hardware.
 - O histórico utiliza arquivo local; uma implantação maior deve usar banco de séries temporais.

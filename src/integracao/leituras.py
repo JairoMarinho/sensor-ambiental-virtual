@@ -33,10 +33,10 @@ def normalizar_leitura(dados: Mapping[str, object]) -> dict[str, object]:
     temperatura = _numero(dados["temperatura_c"], "temperatura_c")
     umidade = _numero(dados["umidade_percentual"], "umidade_percentual")
 
-    if not -40.0 <= temperatura <= 80.0:
-        raise ValueError("temperatura_c deve estar entre -40 e 80")
-    if not 0.0 <= umidade <= 100.0:
-        raise ValueError("umidade_percentual deve estar entre 0 e 100")
+    if not -20.0 <= temperatura <= 60.0:
+        raise ValueError("temperatura_c deve estar entre -20 e 60")
+    if not 5.0 <= umidade <= 95.0:
+        raise ValueError("umidade_percentual deve estar entre 5 e 95")
 
     situacao_recebida = dados.get("situacao")
     situacao = (
